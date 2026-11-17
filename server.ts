@@ -1525,9 +1525,11 @@ export function createPlugin(
         "Mark the active BB Goal completed after all required work is done and verified.",
       instructions:
         "Use only for the active BB Goal. Include its exact ID and revision, a completion summary, and concrete verification evidence.",
-      experimental_statusLabels: {
-        pending: "Completing Goal",
-        completed: "Completed Goal",
+      presentation: {
+        label: {
+          pending: "Completing Goal",
+          completed: "Completed Goal",
+        },
       },
       parameters: goalCompleteInputSchema,
       async execute(input, context) {
@@ -1557,9 +1559,11 @@ export function createPlugin(
         "Report a genuine external Blockage after the same blocker persists for at least three consecutive Goal turns.",
       instructions:
         "Use only for a genuine external impasse. Include the exact Goal ID and revision, the required external action, concrete evidence, and the repeated-turn count. Do not use for ordinary difficulty, uncertainty, failures, usage limits, pending interactions, or changed blockers.",
-      experimental_statusLabels: {
-        pending: "Reporting Goal Blockage",
-        completed: "Reported Goal Blockage",
+      presentation: {
+        label: {
+          pending: "Reporting Goal Blockage",
+          completed: "Reported Goal Blockage",
+        },
       },
       parameters: goalBlockedInputSchema,
       async execute(input, context) {

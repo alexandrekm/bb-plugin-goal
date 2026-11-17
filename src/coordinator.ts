@@ -28,6 +28,7 @@ export type GoalThreadStatus =
   | "active"
   | "error"
   | "idle"
+  | "pending"
   | "starting"
   | "stopping";
 
@@ -37,6 +38,7 @@ export type GoalThreadRuntimeStatus =
   | "active"
   | "error"
   | "idle"
+  | "pending"
   | "provisioning"
   | "starting"
   | "stopping";
