@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { fireEvent, waitFor } from "@testing-library/react";
-import type { JsonValue } from "@get-bb/plugin-sdk/app";
+import type { ExperimentalThreadActionTabProps } from "@get-bb/plugin-sdk/app";
 import {
   loadPluginApp,
   renderSlot,
@@ -55,8 +55,22 @@ function goalBanner() {
   return banner;
 }
 
+type CapturedTab = CapturedPluginApp["tabs"][number];
+type ThreadActionTab = Extract<
+  CapturedTab,
+  { context: { kind: "thread" }; availability: "action" }
+>;
+
+function isHistoryTab(tab: CapturedTab): tab is ThreadActionTab {
+  return (
+    tab.id === "history" &&
+    tab.context.kind === "thread" &&
+    tab.availability === "action"
+  );
+}
+
 function historyPanel() {
-  const panel = app.threadPanelActions[0];
+  const panel = app.tabs.find(isHistoryTab);
   if (panel === undefined) throw new Error("Goal history panel was not registered");
   return panel;
 }
@@ -121,8 +135,14 @@ function handlers(initialGoal: Goal | null): RpcHandlers {
 describe("Goal composer row", () => {
   it("is an always-visible thread composer banner with a start path", async () => {
     expect(app.composerCustomizations).toHaveLength(1);
-    expect(app.threadPanelActions).toMatchObject([
-      { id: "history", title: "Goal history", icon: "History" },
+    expect(app.tabs).toMatchObject([
+      {
+        context: { kind: "thread" },
+        availability: "action",
+        id: "history",
+        title: "Goal history",
+        icon: "History",
+      },
     ]);
     expect(app.composerCustomizations[0]).toMatchObject({
       id: "goal-row",
@@ -136,7 +156,7 @@ describe("Goal composer row", () => {
       {
         context: { threadId: "thr_ui", projectId: "proj_ui" },
         rpc: handlers(null),
-        openThreadPanel: () => true,
+        experimental_panel: { openTab: () => true },
       },
     );
     try {
@@ -153,10 +173,17 @@ describe("Goal composer row", () => {
       expect(await slot.findByText("Active Goal")).toBeTruthy();
       expect(slot.getByTitle("Ship the complete path")).toBeTruthy();
       fireEvent.click(slot.getByRole("button", { name: "History" }));
-      expect(slot.inspection.navigateCalls).toEqual([
+      expect(slot.inspection.experimental_panelCalls).toEqual([
         {
-          method: "openThreadPanel",
-          options: { actionId: "history", title: "Goal history" },
+          method: "openTab",
+          options: {
+            tab: {
+              id: "history",
+              context: { kind: "thread" },
+              availability: "action",
+            },
+            title: "Goal history",
+          },
         },
       ]);
       expect(slot.inspection.rpcCalls).toEqual([
@@ -314,11 +341,11 @@ describe("Goal composer row", () => {
       rpc,
     });
     const panel = renderSlot<
-      { threadId: string; params: JsonValue | null },
+      ExperimentalThreadActionTabProps,
       typeof rpcContract
     >(
       historyPanel(),
-      { threadId: "thr_ui", params: null },
+      { threadId: "thr_ui", environment: null, params: null },
       { rpc },
     );
     try {
@@ -401,11 +428,11 @@ describe("Goal composer row", () => {
     };
 
     const slot = renderSlot<
-      { threadId: string; params: JsonValue | null },
+      ExperimentalThreadActionTabProps,
       typeof rpcContract
     >(
       historyPanel(),
-      { threadId: "thr_ui", params: null },
+      { threadId: "thr_ui", environment: null, params: null },
       { rpc },
     );
     try {
@@ -466,11 +493,11 @@ describe("Goal composer row", () => {
       verificationEvidence: "Coordinator, fake-host, and UI tests pass.",
     };
     const slot = renderSlot<
-      { threadId: string; params: JsonValue | null },
+      ExperimentalThreadActionTabProps,
       typeof rpcContract
     >(
       historyPanel(),
-      { threadId: "thr_ui", params: null },
+      { threadId: "thr_ui", environment: null, params: null },
       { rpc: handlers(completed) },
     );
     try {
@@ -493,9 +520,9 @@ describe("Goal composer row", () => {
       usageResetAt: null,
     };
     const slot = renderSlot<
-      { threadId: string; params: JsonValue | null },
+      ExperimentalThreadActionTabProps,
       typeof rpcContract
-    >(historyPanel(), { threadId: "thr_ui", params: null }, {
+    >(historyPanel(), { threadId: "thr_ui", environment: null, params: null }, {
       rpc: handlers(paused),
     });
     try {
@@ -538,9 +565,9 @@ describe("Goal composer row", () => {
       },
     };
     const slot = renderSlot<
-      { threadId: string; params: JsonValue | null },
+      ExperimentalThreadActionTabProps,
       typeof rpcContract
-    >(historyPanel(), { threadId: "thr_ui", params: null }, {
+    >(historyPanel(), { threadId: "thr_ui", environment: null, params: null }, {
       rpc: handlers(paused),
     });
     try {
@@ -564,9 +591,9 @@ describe("Goal composer row", () => {
       blockageRepeatedTurns: 3,
     };
     const slot = renderSlot<
-      { threadId: string; params: JsonValue | null },
+      ExperimentalThreadActionTabProps,
       typeof rpcContract
-    >(historyPanel(), { threadId: "thr_ui", params: null }, {
+    >(historyPanel(), { threadId: "thr_ui", environment: null, params: null }, {
       rpc: handlers(blocked),
     });
     try {
@@ -581,11 +608,11 @@ describe("Goal composer row", () => {
 
   it("renders panel empty and error states", async () => {
     const empty = renderSlot<
-      { threadId: string; params: JsonValue | null },
+      ExperimentalThreadActionTabProps,
       typeof rpcContract
     >(
       historyPanel(),
-      { threadId: "thr_ui", params: null },
+      { threadId: "thr_ui", environment: null, params: null },
       { rpc: handlers(null) },
     );
     try {
@@ -604,11 +631,11 @@ describe("Goal composer row", () => {
       },
     };
     const errored = renderSlot<
-      { threadId: string; params: JsonValue | null },
+      ExperimentalThreadActionTabProps,
       typeof rpcContract
     >(
       historyPanel(),
-      { threadId: "thr_ui", params: null },
+      { threadId: "thr_ui", environment: null, params: null },
       { rpc: failing },
     );
     try {

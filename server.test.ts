@@ -53,6 +53,7 @@ function agentContext(
       capabilities: { supportsNativeUserQuestion: false },
     },
     origin: { kind: null, pluginId: null },
+    pluginMetadata: {},
   };
 }
 
@@ -684,7 +685,6 @@ describe("Goal BB adapter", () => {
               status: precedence.status,
               runtime: {
                 displayStatus: precedence.runtimeStatus,
-                hostReconnectGraceExpiresAt: null,
               },
               environmentId: "env_test",
             }),

@@ -7,8 +7,8 @@ import {
 } from "react";
 import {
   definePluginApp,
+  experimental_useAppPanel,
   useBbContext,
-  useBbNavigate,
   useRealtime,
   useRealtimeConnectionState,
   useRpc,
@@ -396,7 +396,7 @@ export function GoalHistoryPanel({ threadId }: { readonly threadId: string }) {
 export function GoalComposerRow() {
   const { threadId } = useBbContext();
   const rpc = useRpc<typeof rpcContract>();
-  const navigate = useBbNavigate();
+  const appPanel = experimental_useAppPanel();
   const connectionState = useRealtimeConnectionState();
   const previousConnectionState = useRef(connectionState);
   const [view, setView] = useState<ViewState>({ kind: "loading" });
@@ -523,8 +523,8 @@ export function GoalComposerRow() {
   }
 
   function openHistory() {
-    const opened = navigate.openThreadPanel({
-      actionId: "history",
+    const opened = appPanel.openTab({
+      tab: { id: "history", context: { kind: "thread" }, availability: "action" },
       title: "Goal history",
     });
     if (!opened) {
@@ -782,7 +782,9 @@ export function GoalComposerRow() {
 }
 
 export default definePluginApp((app) => {
-  app.slots.threadPanelAction({
+  app.slots.experimental_tab({
+    context: { kind: "thread" },
+    availability: "action",
     id: "history",
     title: "Goal history",
     icon: "History",
